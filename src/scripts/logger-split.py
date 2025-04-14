@@ -1,31 +1,37 @@
 import csv
 
-# Define the file paths for each URI type
+# Define output file paths
 output_files = {
-    "acc-x": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/acc_x.csv",
-    "acc-y": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/acc_y.csv",
-    "acc-z": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/acc_z.csv"
+    "acc-x": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/evaluation-analysis/8min/acc_x.csv",
+    "acc-y": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/evaluation-analysis/8min/acc_y.csv",
+    "acc-z": "/home/kush/Code/RSP/solid-stream-aggregator-evaluation/evaluation-analysis/8min/acc_z.csv"
 }
 
-# Open each output file
+# Open each output file for writing and initialize CSV writers
 output_writers = {}
+file_handles = {}  # To store file handles for later closing
 for key, filename in output_files.items():
     f = open(filename, "w", newline="")
-    writer = csv.writer(f, delimiter=",")
-    writer.writerow(["timestamp", "sequence_number", "uri"])  # Write header
+    writer = csv.writer(f)
+    writer.writerow(["timestamp", "sequence_number", "uri", "observation"])  # Write header
     output_writers[key] = writer
+    file_handles[key] = f
 
-# Read the original data and filter based on URI
-with open("/home/kush/Code/RSP/solid-stream-aggregator-evaluation/output.csv", "r") as infile:
-    reader = csv.DictReader(infile, delimiter=",")
+# Process the data based on URI
+with open("/home/kush/Code/RSP/solid-stream-aggregator-evaluation/evaluation-analysis/8min/replayer-log.csv", "r") as infile:
+    reader = csv.DictReader(infile)
     for row in reader:
-        if "acc-x" in row["uri"]:
-            output_writers["acc-x"].writerow([row["timestamp"], row["sequence_number"], row["uri"]])
-        elif "acc-y" in row["uri"]:
-            output_writers["acc-y"].writerow([row["timestamp"], row["sequence_number"], row["uri"]])
-        elif "acc-z" in row["uri"]:
-            output_writers["acc-z"].writerow([row["timestamp"], row["sequence_number"], row["uri"]])
+        uri = row.get("uri")
+        
+        # Check if uri is not None before processing
+        if uri:
+            if "acc-x" in uri:
+                output_writers["acc-x"].writerow([row["timestamp"], row["sequence_number"], uri, row["observation"]])
+            elif "acc-y" in uri:
+                output_writers["acc-y"].writerow([row["timestamp"], row["sequence_number"], uri, row["observation"]])
+            elif "acc-z" in uri:
+                output_writers["acc-z"].writerow([row["timestamp"], row["sequence_number"], uri, row["observation"]])
 
-# Close the output files
-for f in output_files.values():
+# Close all output files
+for f in file_handles.values():
     f.close()
